@@ -1,4 +1,4 @@
-// Type definitions for azure-mobile-apps v2.1.7
+// Type definitions for azure-mobile-apps v2.0.0-beta3
 // Project: https://github.com/Azure/azure-mobile-apps-node/
 // Definitions by: Microsoft Azure <https://github.com/Azure/>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
@@ -10,7 +10,6 @@ declare module "azure-mobile-apps" {
     interface AzureMobileApps {
         (configuration?: Azure.MobileApps.Configuration): Azure.MobileApps.Platforms.Express.MobileApp;
         table(): Azure.MobileApps.Platforms.Express.Table;
-        api(definition?: Azure.MobileApps.ApiDefinition): Azure.MobileApps.ApiDefinition;
         logger: Azure.MobileApps.Logger;
         query: Azure.MobileApps.Query;
     }
@@ -30,9 +29,9 @@ declare module "azure-mobile-apps/src/query" {
 
 declare namespace Azure.MobileApps {
     // the additional Platforms namespace is required to avoid collisions with the main Express namespace
-    export namespace Platforms {
-        export namespace Express {
-            interface MobileApp extends Middleware {
+    export module Platforms {
+        export module Express {
+            interface MobileApp {
                 configuration: Configuration;
                 tables: Tables;
                 table(): Table;
@@ -48,6 +47,7 @@ declare namespace Azure.MobileApps {
 
             interface Table {
                 authorize?: boolean;
+                access?: AccessType;
                 autoIncrement?: boolean;
                 dynamicSchema?: boolean;
                 name: string;
@@ -67,7 +67,10 @@ declare namespace Azure.MobileApps {
                 (operationHandler: (context: Context) => void): Table;
                 use(...middleware: Middleware[]): Table;
                 use(middleware: Middleware[]): Table;
+                access: AccessType;
             }
+
+            type AccessType = 'anonymous' | 'authenticated' | 'disabled';
 
             interface Tables {
                 configuration: Configuration;
@@ -78,7 +81,7 @@ declare namespace Azure.MobileApps {
         }
     }
 
-    export namespace Data {
+    export module Data {
         interface Table {
             read(query: QueryJs): Thenable<any[]>;
             update(item: any, query: QueryJs): Thenable<any>;
@@ -135,7 +138,7 @@ declare namespace Azure.MobileApps {
         notifications?: Configuration.Notifications;
     }
 
-    export namespace Configuration {
+    export module Configuration {
         // it would be nice to have the config for various providers in separate interfaces,
         // but this is the simplest solution to support variations of the current setup
         interface Data {
@@ -149,7 +152,6 @@ declare namespace Azure.MobileApps {
             options?: { encrypt: boolean };
             schema?: string;
             dynamicSchema?: boolean;
-            filename?: string;
         }
 
         interface Auth {
@@ -165,9 +167,8 @@ declare namespace Azure.MobileApps {
         interface LoggingTransport { }
 
         interface Cors {
-            exposeHeaders: string;
             maxAge?: number;
-            hostnames: string[];
+            origins: string[];
         }
 
         interface Notifications {
@@ -212,33 +213,42 @@ declare namespace Azure.MobileApps {
 
     // general
     var nh: Azure.ServiceBus.NotificationHubService;
-
     interface Context {
         query: QueryJs;
         id: string | number;
         item: any;
         req: Express.Request;
         res: Express.Response;
-        data: (table: TableDefinition) => Data.Table;
+        data: ContextData;
         tables: (tableName: string) => Data.Table;
         user: User;
         push: typeof nh;
         logger: Logger;
         execute(): Thenable<any>;
-        next(error: string|Error): any;
+    }
+
+    interface ContextData {
+        (table: TableDefinition): Data.Table;
+        execute(q: SqlQueryDefinition): Thenable<any>;
+    }
+
+    interface SqlQueryDefinition {
+        sql: string;
+        parameters?: SqlParameterDefinition[];
+    }
+
+    interface SqlParameterDefinition {
+        name: string;
+        value: any;
     }
 
     interface TableDefinition {
         authorize?: boolean;
-        access?: string;
         autoIncrement?: boolean;
         dynamicSchema?: boolean;
         name?: string;
         columns?: any;
         schema?: string;
-        databaseTableName?: string;
-        maxTop?: number;
-        softDelete?: boolean;
     }
 
     interface ApiDefinition {
