@@ -35,7 +35,7 @@ module.exports = function (configuration) {
     return api;
 
     function createProvider() {
-        var provider = (configuration && configuration.data && configuration.data.provider) || 'memory';
+        var provider = (configuration && configuration.data && configuration.data.provider) || 'sqlite';
         return (types.isFunction(provider) ? provider : require('./' + provider))(configuration.data);
     }
 };

@@ -21,6 +21,7 @@ api.configuration = function (configuration) {
         .defaults(testDefaults)
         .file()
         .environment()
+        .object({ data: { provider: 'sqlite' } })
         .object(configuration)
         .commandLine()
         .apply();

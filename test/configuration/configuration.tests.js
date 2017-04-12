@@ -18,6 +18,7 @@ describe('azure-mobile-apps.configuration', function () {
             mobileApp = mobileApps(undefined, environment);
         expect(mobileApp.configuration.data.server).to.equal('azure-mobile-apps-test.database.windows.net');
         expect(mobileApp.configuration.data.port).to.equal(1433);
+        expect(mobileApp.configuration.data.provider).to.equal('mssql');
     });
 
     it("sets table configuration from config connection string", function () {
@@ -28,6 +29,7 @@ describe('azure-mobile-apps.configuration', function () {
         }, {});
         expect(mobileApp.configuration.data.server).to.equal('azure-mobile-apps-test.database.windows.net');
         expect(mobileApp.configuration.data.port).to.equal(1433);
+        expect(mobileApp.configuration.data.provider).to.equal('mssql');
     });
 
     it("sets does not overwrite data configuration values", function () {
@@ -81,5 +83,21 @@ describe('azure-mobile-apps.configuration', function () {
             mobileApp = mobileApps(undefined, environment);
 
         expect(mobileApp.configuration.auth.validateTokens).to.be.true;
+    });
+
+    it("does not override provider when connection string set from environment", function () {
+        var environment = { MS_TableConnectionString: 'Server=tcp:azure-mobile-apps-test.database.windows.net,1433;Database=e2etest-v2-node;User ID=azure-mobile-apps-test@azure-mobile-apps-test;Password=abc123;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;' },
+            mobileApp = mobileApps({ data: { provider: 'sqlite' } }, environment);
+        expect(mobileApp.configuration.data.provider).to.equal('sqlite');
+    });
+
+    it("does not override provider when connection string set from object", function () {
+        var mobileApp = mobileApps({
+            data: {
+                connectionString: 'Server=tcp:azure-mobile-apps-test.database.windows.net,1433;Database=e2etest-v2-node;User ID=azure-mobile-apps-test@azure-mobile-apps-test;Password=abc123;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;',
+                provider: 'sqlite'
+            }
+        }, {});
+        expect(mobileApp.configuration.data.provider).to.equal('sqlite');
     });
 });
